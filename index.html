@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Theorem Editor & Exporter</title>
 
-  <!-- MathJax with HTML-CSS output -->
+  <!-- MathJax with HTML-CSS (CHTML) output -->
   <script>
     window.MathJax = {
       tex: {
@@ -69,8 +69,11 @@
       border-radius: 10px;
       color: #000;
       font-size: 18px;
-      line-height: 1.6;
+      line-height: 1.8;
       max-width: 800px;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      min-height: 100px;
     }
 
     #downloadButton {
@@ -81,10 +84,12 @@
       textarea {
         font-size: 14px;
       }
+
       button {
         width: 100%;
         margin-bottom: 10px;
       }
+
       #renderedContent {
         font-size: 16px;
       }
@@ -122,8 +127,9 @@ $$
         content.style.display = 'block';
         downloadBtn.style.display = 'inline-block';
         MathJax.typesetClear();
-        MathJax.typesetPromise([content]);
-        toggleBtn.textContent = "Hide Preview";
+        MathJax.typesetPromise([content]).then(() => {
+          toggleBtn.textContent = "Hide Preview";
+        });
       } else {
         content.style.display = 'none';
         downloadBtn.style.display = 'none';
@@ -135,11 +141,17 @@ $$
 
     async function exportAsImage() {
       const content = document.getElementById("renderedContent");
+
+      // Ensure MathJax finishes
       await MathJax.typesetPromise([content]);
+
+      // Small delay to allow all styles to settle
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       html2canvas(content, {
         backgroundColor: "#ffffff",
-        scale: 2
+        scale: 2,
+        useCORS: true
       }).then(canvas => {
         const link = document.createElement("a");
         link.download = "theorem.png";
