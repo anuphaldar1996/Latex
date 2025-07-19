@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Theorem Editor & Exporter</title>
+
+  <!-- MathJax with HTML-CSS output -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      options: {
+        renderActions: {
+          addMenu: []
+        }
+      },
+      chtml: {
+        scale: 1,
+        displayAlign: 'left'
+      }
+    };
+  </script>
+  <script id="MathJax-script" async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <!-- html2canvas -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f2f2f2;
+      padding: 20px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 180px;
+      font-size: 16px;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-right: 10px;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      background-color: #007bff;
+      color: white;
+      margin-bottom: 50px;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    #renderedContent {
+      display: none;
+      margin-top: 20px;
+      background: #ffffff;
+      padding: 25px;
+      border-radius: 10px;
+      color: #000;
+      font-size: 18px;
+      line-height: 1.6;
+      max-width: 800px;
+    }
+
+    #downloadButton {
+      display: none;
+    }
+
+    @media screen and (max-width: 600px) {
+      textarea {
+        font-size: 14px;
+      }
+      button {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+      #renderedContent {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h2>📘 LaTeX Editor & PNG Exporter</h2>
+
+  <textarea id="inputText" placeholder="Write your LaTeX code here...">
+$$
+\text{Let } f(x) = x^2 + 3x + 2. \\
+\text{Then, } f(x) = (x+1)(x+2)
+$$
+  </textarea>
+
+  <br>
+  <button id="toggleButton" onclick="togglePreview()">Render Preview</button>
+  <button id="downloadButton" onclick="exportAsImage()">Download as PNG</button>
+
+  <div id="renderedContent"></div>
+
+  <script>
+    let isPreviewVisible = false;
+
+    function togglePreview() {
+      const input = document.getElementById("inputText").value;
+      const content = document.getElementById("renderedContent");
+      const toggleBtn = document.getElementById("toggleButton");
+      const downloadBtn = document.getElementById("downloadButton");
+
+      if (!isPreviewVisible) {
+        content.innerHTML = input.replace(/\n/g, "<br>");
+        content.style.display = 'block';
+        downloadBtn.style.display = 'inline-block';
+        MathJax.typesetClear();
+        MathJax.typesetPromise([content]);
+        toggleBtn.textContent = "Hide Preview";
+      } else {
+        content.style.display = 'none';
+        downloadBtn.style.display = 'none';
+        toggleBtn.textContent = "Render Preview";
+      }
+
+      isPreviewVisible = !isPreviewVisible;
+    }
+
+    async function exportAsImage() {
+      const content = document.getElementById("renderedContent");
+      await MathJax.typesetPromise([content]);
+
+      html2canvas(content, {
+        backgroundColor: "#ffffff",
+        scale: 2
+      }).then(canvas => {
+        const link = document.createElement("a");
+        link.download = "theorem.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      });
+    }
+  </script>
+
+  <footer style="margin-top: 40px; font-size: 14px;">
+    © 2025 <a href="https://sites.google.com/view/prof-haldar/home_1" target="_blank">Anup Haldar</a> — All rights reserved. Site personally maintained by the owner.
+  </footer>
+
+</body>
+</html>
