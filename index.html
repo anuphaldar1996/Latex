@@ -1,169 +1,181 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Theorem Editor & Exporter</title>
-
-  <!-- MathJax with HTML-CSS (CHTML) output -->
-  <script>
-    window.MathJax = {
-      tex: {
-        inlineMath: [['$', '$'], ['\\(', '\\)']],
-        displayMath: [['$$', '$$'], ['\\[', '\\]']]
-      },
-      options: {
-        renderActions: {
-          addMenu: []
+    <meta charset="UTF-8">
+    <title>Theorem Editor & Exporter</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
         }
-      },
-      chtml: {
-        scale: 1,
-        displayAlign: 'left'
-      }
-    };
-  </script>
-  <script id="MathJax-script" async
-    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
-
-  <!-- html2canvas -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f2f2f2;
-      padding: 20px;
-    }
-
-    textarea {
-      width: 100%;
-      height: 180px;
-      font-size: 16px;
-      padding: 12px;
-      margin-bottom: 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
-
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-      margin-right: 10px;
-      cursor: pointer;
-      border: none;
-      border-radius: 6px;
-      background-color: #007bff;
-      color: white;
-      margin-bottom: 50px;
-    }
-
-    button:hover {
-      background-color: #0056b3;
-    }
-
-    #renderedContent {
-      display: none;
-      margin-top: 20px;
-      background: #ffffff;
-      padding: 25px;
-      border-radius: 10px;
-      color: #000;
-      font-size: 18px;
-      line-height: 1.8;
-      max-width: 800px;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-      min-height: 100px;
-    }
-
-    #downloadButton {
-      display: none;
-    }
-
-    @media screen and (max-width: 600px) {
-      textarea {
-        font-size: 14px;
-      }
-
-      button {
-        width: 100%;
-        margin-bottom: 10px;
-      }
-
-      #renderedContent {
-        font-size: 16px;
-      }
-    }
-  </style>
+        .editor-container {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        #inputArea, #previewArea {
+            flex: 1;
+            min-height: 300px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        #inputArea {
+            font-family: 'Courier New', monospace;
+            border: 1px solid #ddd;
+        }
+        #previewArea {
+            border: 1px solid #ccc;
+            overflow: auto;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .theorem {
+            background-color: #f8f8f8;
+            border-left: 4px solid #4CAF50;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .theorem-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        .export-container {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+    </style>
+    <!-- Load KaTeX for faster math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    <!-- html-to-image for better PNG export -->
+    <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js"></script>
 </head>
 <body>
+    <h1>Theorem Editor</h1>
+    <p>Write your complete theorem below (text and equations). Use $...$ for inline math and $$...$$ for display math.</p>
+    
+    <div class="editor-container">
+        <textarea id="inputArea" spellcheck="false">\textbf{Theorem 1.} (Pythagorean Theorem)
+For any right-angled triangle, the square of the hypotenuse ($c$) is equal to the sum of the squares of the other two sides ($a$ and $b$):
 
-  <h2>📘 LaTeX Editor & PNG Exporter</h2>
+$$c^2 = a^2 + b^2$$
 
-  <textarea id="inputText" placeholder="Write your LaTeX code here...">
-$$
-\text{Let } f(x) = x^2 + 3x + 2. \\
-\text{Then, } f(x) = (x+1)(x+2)
-$$
-  </textarea>
+\textbf{Proof:}
+Consider a right-angled triangle with sides $a$, $b$, and hypotenuse $c$. The area of the square constructed on the hypotenuse is $c^2$. This area equals the sum of the areas of four identical triangles and the square in the middle:
 
-  <br>
-  <button id="toggleButton" onclick="togglePreview()">Render Preview</button>
-  <button id="downloadButton" onclick="exportAsImage()">Download as PNG</button>
+$$c^2 = 4 \times \left(\frac{1}{2}ab\right) + (b-a)^2$$
+$$c^2 = 2ab + b^2 - 2ab + a^2$$
+$$c^2 = a^2 + b^2$$
 
-  <div id="renderedContent"></div>
+Thus, the theorem is proved.</textarea>
+        <div id="previewArea"></div>
+    </div>
+    
+    <div>
+        <button id="renderBtn">Render Theorem</button>
+        <button id="exportBtn">Export as PNG</button>
+    </div>
+    
+    <div class="export-container" style="display: none;">
+        <h3>Exported Theorem</h3>
+        <div id="exportArea"></div>
+        <p>Right-click the image and select "Save image as..." to download.</p>
+    </div>
 
-  <script>
-    let isPreviewVisible = false;
-
-    function togglePreview() {
-      const input = document.getElementById("inputText").value;
-      const content = document.getElementById("renderedContent");
-      const toggleBtn = document.getElementById("toggleButton");
-      const downloadBtn = document.getElementById("downloadButton");
-
-      if (!isPreviewVisible) {
-        content.innerHTML = input.replace(/\n/g, "<br>");
-        content.style.display = 'block';
-        downloadBtn.style.display = 'inline-block';
-        MathJax.typesetClear();
-        MathJax.typesetPromise([content]).then(() => {
-          toggleBtn.textContent = "Hide Preview";
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputArea = document.getElementById('inputArea');
+            const previewArea = document.getElementById('previewArea');
+            const exportArea = document.getElementById('exportArea');
+            const renderBtn = document.getElementById('renderBtn');
+            const exportBtn = document.getElementById('exportBtn');
+            const exportContainer = document.querySelector('.export-container');
+            
+            // Initial render
+            renderPreview();
+            
+            // Render button click handler
+            renderBtn.addEventListener('click', renderPreview);
+            
+            // Export button click handler
+            exportBtn.addEventListener('click', async function() {
+                exportContainer.style.display = 'block';
+                exportArea.innerHTML = previewArea.innerHTML;
+                
+                try {
+                    // Add slight delay to ensure DOM is updated
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    
+                    // Convert to PNG
+                    const dataUrl = await htmlToImage.toPng(exportArea, {
+                        quality: 1,
+                        backgroundColor: 'white',
+                        pixelRatio: 2 // Higher quality
+                    });
+                    
+                    // Replace content with the image
+                    exportArea.innerHTML = `<img src="${dataUrl}" style="max-width:100%;">`;
+                } catch (error) {
+                    exportArea.innerHTML = `<p style="color:red">Error exporting: ${error.message}</p>`;
+                }
+            });
+            
+            function renderPreview() {
+                let content = inputArea.value;
+                
+                // Convert simple formatting
+                content = content.replace(/\\textbf{(.*?)}/g, '<strong>$1</strong>');
+                content = content.replace(/\\textit{(.*?)}/g, '<em>$1</em>');
+                
+                // Wrap in theorem environment
+                previewArea.innerHTML = `
+                    <div class="theorem">
+                        ${content}
+                    </div>
+                `;
+                
+                // Render math with KaTeX
+                renderMathInElement(previewArea, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ],
+                    throwOnError: false
+                });
+                
+                // Also render in export area (hidden)
+                exportArea.innerHTML = previewArea.innerHTML;
+                renderMathInElement(exportArea, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ],
+                    throwOnError: false
+                });
+            }
         });
-      } else {
-        content.style.display = 'none';
-        downloadBtn.style.display = 'none';
-        toggleBtn.textContent = "Render Preview";
-      }
-
-      isPreviewVisible = !isPreviewVisible;
-    }
-
-    async function exportAsImage() {
-      const content = document.getElementById("renderedContent");
-
-      // Ensure MathJax finishes
-      await MathJax.typesetPromise([content]);
-
-      // Small delay to allow all styles to settle
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      html2canvas(content, {
-        backgroundColor: "#ffffff",
-        scale: 2,
-        useCORS: true
-      }).then(canvas => {
-        const link = document.createElement("a");
-        link.download = "theorem.png";
-        link.href = canvas.toDataURL("image/png");
-        link.click();
-      });
-    }
-  </script>
-
-  <footer style="margin-top: 40px; font-size: 14px;">
-    © 2025 <a href="https://sites.google.com/view/prof-haldar/home_1" target="_blank">Anup Haldar</a> — All rights reserved. Site personally maintained by the owner.
-  </footer>
-
+    </script>
 </body>
 </html>
